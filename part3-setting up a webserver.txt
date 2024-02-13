@@ -1,0 +1,53 @@
+#include <WiFi.h>
+#include <WebServer.h>
+
+const int led = 2; // LED connected to GPIO 2
+
+WebServer server(80); // Create a webserver object
+
+void handleRoot() {
+  server.send(200, "text/html", "<html><head><title>ESP32 Web Server</title></head><body><h1>Hello from ESP32!</h1><p><a href=\"/led/on\">Turn LED ON</a></p><p><a href=\"/led/off\">Turn LED OFF</a></p></body></html>");
+}
+
+void handleLedOn() {
+  digitalWrite(led, HIGH);
+  server.send(200, "text/plain", "LED turned on");
+}
+
+void handleLedOff() {
+  digitalWrite(led, LOW);
+  server.send(200, "text/plain", "LED turned off");
+}
+
+void setup() {
+  pinMode(led, OUTPUT); // Set LED pin as output
+  digitalWrite(led, HIGH); // Initially turn LED off
+
+  Serial.begin(115200);
+  delay(10);
+
+  // Connect to Wi-Fi
+  WiFi.begin("Betzy", "Meyers23");
+  Serial.println("Connecting to Wi-Fi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("Wi-Fi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  // Define HTTP endpoints
+  server.on("/", HTTP_GET, handleRoot);
+  server.on("/led/on", HTTP_GET, handleLedOn);
+  server.on("/led/off", HTTP_GET, handleLedOff);
+
+  // Start server
+  server.begin();
+  Serial.println("Server started");
+}
+
+void loop() {
+  server.handleClient(); // Handle client requests
+}

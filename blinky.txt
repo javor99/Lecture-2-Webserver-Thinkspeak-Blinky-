@@ -1,0 +1,54 @@
+#define BLYNK_TEMPLATE_ID "TMPL53ByQPoQj"
+#define BLYNK_TEMPLATE_NAME "Quickstart Template"
+#define BLYNK_AUTH_TOKEN "VPCs5A-ijiXlNZAjI6u0_RLgjTVEn-Bt"
+#include <WiFi.h>
+#include <BlynkSimpleEsp32.h>
+#include <DHT.h>
+
+#define DHTPIN 32          // Digital pin connected to the DHT sensor
+#define DHTTYPE DHT11      // DHT 11
+#define LED_PIN 2          // Digital pin connected to the LED
+
+char auth[] = "VPCs5A-ijiXlNZAjI6u0_RLgjTVEn-Bt";     // Your Blynk authentication token
+char ssid[] = "Betzy";       // Your WiFi SSID
+char pass[] = "Meyers23";   // Your WiFi password
+
+DHT dht(DHTPIN, DHTTYPE);
+
+BlynkTimer timer;
+
+void sendSensorData() {
+  // Read temperature and humidity from DHT sensor
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
+
+  // Send temperature and humidity data to Blynk
+  Blynk.virtualWrite(V8, temperature); // Virtual pin V1 for temperature
+  Blynk.virtualWrite(V9, humidity);    // Virtual pin V2 for humidity
+}
+
+BLYNK_WRITE(V6) {
+  int ledState = param.asInt(); // Get state of the LED button from the app
+  digitalWrite(LED_PIN, ledState); // Set LED state based on the button
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  // Initialize DHT sensor
+  dht.begin();
+
+  // Connect to WiFi network
+  Blynk.begin(auth, ssid, pass);
+
+  // Set up timer to send sensor data every 5 seconds
+  timer.setInterval(5000L, sendSensorData);
+
+  // Set LED pin as output
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  Blynk.run();
+  timer.run();
+}
